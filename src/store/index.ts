@@ -1,4 +1,4 @@
-import { configureStore, createSlice, PayloadAction, combineReducers } from '@reduxjs/toolkit';
+import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { storage } from '../utils/storage';
 import type {
   Customer,
@@ -67,13 +67,13 @@ const loadState = (): AppState => {
         try {
           atob(b64);
           return saved;
-        } catch (e) {
+        } catch {
           console.log('Detected corrupted data, regenerating...');
           storage.clear();
         }
       }
     }
-  } catch (e) {
+  } catch {
     console.log('Loading fresh data...');
   }
 
@@ -180,7 +180,7 @@ const appSlice = createSlice({
       saveState(state);
     },
     updateAppointment: (state, action: PayloadAction<Appointment>) => {
-      const index = state.appointments.findIndex(a => a.customerId === action.payload.customerId);
+      const index = state.appointments.findIndex(a => a.id === action.payload.id);
       if (index !== -1) {
         state.appointments[index] = action.payload;
         saveState(state);

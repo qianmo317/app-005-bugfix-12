@@ -14,7 +14,6 @@ import {
   message,
   List,
   Avatar,
-  Tooltip,
   Input
 } from 'antd';
 import {
@@ -46,7 +45,7 @@ const AppointmentCalendar: React.FC = () => {
     .filter((a) => a.startTime.split('T')[0] === selectedDateStr)
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
-  const waitListItems = state.waitList.filter((w) => w.status === 'notified');
+  const waitListItems = state.waitList.filter((w) => w.status === 'waiting');
 
   const getTileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view !== 'month') return null;
@@ -98,12 +97,17 @@ const AppointmentCalendar: React.FC = () => {
       };
 
       const hasConflict = state.appointments.some((a) => {
-        if (a.customerId !== values.customerId || a.status === 'cancelled') return false;
+        if (
+          a.employeeId !== values.employeeId ||
+          !['pending', 'confirmed'].includes(a.status)
+        ) {
+          return false;
+        }
         const aStart = new Date(a.startTime).getTime();
         const aEnd = new Date(a.endTime).getTime();
         const newStart = startTime.valueOf();
         const newEnd = endTime.valueOf();
-        return (newStart >= aStart && newStart <= aEnd) || (newEnd >= aStart && newEnd <= aEnd);
+        return newStart < aEnd && newEnd > aStart;
       });
 
       if (hasConflict) {
@@ -156,15 +160,6 @@ const AppointmentCalendar: React.FC = () => {
         message.success('预约已取消');
       },
     });
-  };
-
-  const availableEmployees = (serviceId: string) => {
-    return state.employees.filter(
-      (e) =>
-        (e.role === 'beautician' || e.role === 'technician') &&
-        e.status === 'active' &&
-        (e.skills.includes(serviceId) || serviceId === undefined)
-    );
   };
 
   return (
